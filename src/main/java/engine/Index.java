@@ -11,12 +11,13 @@ public class Index {
 		// Creates a new chessboard in the standard initial position
 	    Board board = new Board();
 	    
-	    Minimax minimax = new Minimax(true);
-	    Move move = minimax.findBestMove(board, 4);
+	    Minimax minimax = new Minimax(6, true, true);
+	    Move move = minimax.findBestMove(board);
 	    
 	    System.out.println(move.toString());
 	    System.out.println(minimax.NODES_EVALUATED + " nodes evaluated");
-	    System.out.println(minimax.ALPHA_BETA);
+	    
+	    //board.getPositionId();
 	}
 
 }
