@@ -1,23 +1,27 @@
 package engine;
 
-import com.github.bhlangonijr.chesslib.*;
-import com.github.bhlangonijr.chesslib.move.*;
+import java.io.FileNotFoundException;
+
+import com.github.bhlangonijr.chesslib.move.MoveGeneratorException;
+
 import minimax.Minimax;
 
 public class Index {
 
-	public static void main(String[] args) throws MoveGeneratorException {
+	public static void main(String[] args) throws MoveGeneratorException, FileNotFoundException {
 		
-		// Creates a new chessboard in the standard initial position
-	    Board board = new Board();
-	    
-	    Minimax minimax = new Minimax(6, true, true);
-	    Move move = minimax.findBestMove(board);
-	    
-	    System.out.println(move.toString());
-	    System.out.println(minimax.NODES_EVALUATED + " nodes evaluated");
-	    
-	    //board.getPositionId();
+		System.out.println("Starting adversary program");
+		
+		for(int i = 0; i < 200; i++) {
+			
+			int depth = i % 4 + 1;
+			String dst = "C:\\Applications\\EE_Engines\\CustomResults\\Raw\\Game" + i + "_Depth" + depth + ".txt";
+			Adversary a = new Adversary(dst, new Minimax(depth, false, false));
+			a.playFullGame();
+			
+			System.out.println("Written game file to " + dst);
+		}
+		
 	}
 
 }
