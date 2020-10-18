@@ -17,6 +17,9 @@ public class Minimax {
 	
 	// node counter for positions
 	public int NODES_EVALUATED = 0;
+	public int ALPHA_BETA_CUTOFFS = 0;
+	public int IDENTICAL_TRANSPOSITIONS = 0;
+	public int RE_SEARCHES = 0;
 	
 	// settings to tweak
 	public int DESIRED_DEPTH;
@@ -55,6 +58,9 @@ public class Minimax {
 		int bestValue = isMaximizing ? -90000 : 90000;
 		Move bestMove = null;
 		NODES_EVALUATED = 0;
+		ALPHA_BETA_CUTOFFS = 0;
+		IDENTICAL_TRANSPOSITIONS = 0;
+		RE_SEARCHES = 0;
 	
 		// loop through possible moves
 		MoveList moves = MoveGenerator.generateLegalMoves(position);
@@ -135,6 +141,9 @@ public class Minimax {
 		if(TRANSPOSITION_TABLE) {
 			if(table.existsPosition(positionId)) {
 				if(table.getDepth(positionId) >= depth) {
+					
+					IDENTICAL_TRANSPOSITIONS++;
+					
 					return table.getValuation(positionId);
 				}
 			}
@@ -156,7 +165,7 @@ public class Minimax {
 		// recurse through nodes with minimax with alpha beta
 		int localBest = maximizing ? -90000 : 90000;
 		
-		// create priority list with transposition tables and aspiration windows
+		// create priority list with transposition tables and aspiration windows - iterative deepening approach
 		boolean usingMovePrioritization = TRANSPOSITION_TABLE && ASPIRATION_WINDOW;
 		ArrayList<Priority> prioritization = new ArrayList<Priority>();
 		if(usingMovePrioritization) {
@@ -179,17 +188,30 @@ public class Minimax {
 					
 					// test out the move
 					position.doMove(p.MOVE);
-					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, Math.max(alpha, p.EVALUATION - WINDOW_SIZE), Math.min(beta, p.EVALUATION + WINDOW_SIZE));
 					position.undoMove();
+					
+					// a costly re-search if the value falls out of bounds
+					if((localValue > alpha && localValue < p.EVALUATION - WINDOW_SIZE) || (localValue < beta && localValue > p.EVALUATION + WINDOW_SIZE)) {
+						
+						RE_SEARCHES++;
+
+						localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+					}
 					
 					localBest = Math.max(localBest, localValue);
 					
 					// alpha cutoff
 					alpha = Math.max(alpha, localBest);
 					if(beta <= alpha) {
+						
+						ALPHA_BETA_CUTOFFS++;
+						
 						return localBest;
 					}
 				}
+				
+				
 			} else {
 				
 				for(Move move : MoveGenerator.generateLegalMoves(position)) {
@@ -204,6 +226,9 @@ public class Minimax {
 					// alpha cutoff
 					alpha = Math.max(alpha, localBest);
 					if(beta <= alpha) {
+
+						ALPHA_BETA_CUTOFFS++;
+
 						return localBest;
 					}
 					
@@ -220,14 +245,25 @@ public class Minimax {
 					
 					// test out the move
 					position.doMove(p.MOVE);
-					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, Math.max(alpha, p.EVALUATION - WINDOW_SIZE), Math.min(beta, p.EVALUATION + WINDOW_SIZE));
 					position.undoMove();
+					
+					// a costly re-search if the value falls out of bounds
+					if((localValue > alpha && localValue < p.EVALUATION - WINDOW_SIZE) || (localValue < beta && localValue > p.EVALUATION + WINDOW_SIZE)) {
+						
+						localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+						
+						RE_SEARCHES++;
+					}
 					
 					localBest = Math.min(localBest, localValue);
 					
 					// beta cutoff
 					beta = Math.min(beta, localBest);
 					if(beta <= alpha) {
+						
+						ALPHA_BETA_CUTOFFS++;
+
 						return localBest;
 					}
 				}
@@ -245,6 +281,9 @@ public class Minimax {
 					// beta cutoff
 					beta = Math.min(beta, localBest);
 					if(beta <= alpha) {
+						
+						ALPHA_BETA_CUTOFFS++;
+
 						return localBest;
 					}
 					

@@ -26,7 +26,10 @@ public class Index {
 		    	
 		    	// first line is the move, second is the # of nodes evaluated, the third is just an empty line for spacing
 		    	System.out.println(move.toString());
-		    	System.out.println(MINIMAX.NODES_EVALUATED);
+		    	System.out.println(MINIMAX.NODES_EVALUATED + " Nodes evaluated");
+		    	System.out.println(MINIMAX.IDENTICAL_TRANSPOSITIONS + " Transposition cutoffs");
+		    	System.out.println(MINIMAX.RE_SEARCHES + " Re-searches");
+		    	System.out.println(MINIMAX.ALPHA_BETA_CUTOFFS + " Alpha beta cutoffs");
 		    	System.out.println();
 			    board.doMove(move);
 			    
