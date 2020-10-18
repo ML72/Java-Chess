@@ -1,55 +1,29 @@
 package engine;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.IOException;
 
-import com.github.bhlangonijr.chesslib.Board;
-import com.github.bhlangonijr.chesslib.move.Move;
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+
 import com.github.bhlangonijr.chesslib.move.MoveGeneratorException;
 
 import minimax.Minimax;
 
 public class Index {
 
-	public static void main(String[] args) throws MoveGeneratorException, FileNotFoundException {
+	public static void main(String[] args) throws MoveGeneratorException, IOException, EncryptedDocumentException, InvalidFormatException {
 		
 		System.out.println("Starting adversary program");
 		
-
-		Board board = new Board();
-		Minimax MINIMAX = new Minimax(4, true, true, true);
-		
-	    for(int i = 0; i < 5; i++) {
-	    	
-		    Move move = MINIMAX.findBestMove(board);
-		    try {
-		    	
-		    	// first line is the move, second is the # of nodes evaluated, the third is just an empty line for spacing
-		    	System.out.println(move.toString());
-		    	System.out.println(MINIMAX.NODES_EVALUATED + " Nodes evaluated");
-		    	System.out.println(MINIMAX.IDENTICAL_TRANSPOSITIONS + " Transposition cutoffs");
-		    	System.out.println(MINIMAX.RE_SEARCHES + " Re-searches");
-		    	System.out.println(MINIMAX.ALPHA_BETA_CUTOFFS + " Alpha beta cutoffs");
-		    	System.out.println();
-			    board.doMove(move);
-			    
-		    } catch(Exception e) {
-		    	
-			    System.out.println("ENGINE ERROR");
-			    break;
-		    }
-	    }
-		
-		/*
-		for(int i = 0; i < 200; i++) {
+		for(int i = 0; i < 3; i++) {
 			
-			int depth = i % 4 + 1;
-			String dst = "C:\\Applications\\EE_Engines\\CustomResults\\Raw\\Game" + (i+1) + "_Depth" + depth + ".txt";
-			Adversary a = new Adversary(dst, new Minimax(depth, true, true));
+			int depth = i % 3 + 1;
+			String dst = "C:\\Applications\\EE_Engines\\CustomResults\\Raw_Data\\Output" + (i+1) + ".xlsx";
+			Adversary a = new Adversary(dst, new Minimax(depth, true, true, true), "Iteration" + (i+1));
 			a.playFullGame();
 			
-			System.out.println("Written game file to " + dst);
-		}*/
+			System.out.println("Written game file to " + dst + " as iteration " + (i+1) + " with depth " + depth);
+		}
 		
 	}
 

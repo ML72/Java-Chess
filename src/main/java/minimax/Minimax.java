@@ -87,6 +87,7 @@ public class Minimax {
 			}
 			
 			position.undoMove();
+			
 		}
 		
 		return bestMove;
