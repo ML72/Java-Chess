@@ -20,8 +20,10 @@ public class Minimax {
 	
 	// settings to tweak
 	public int DESIRED_DEPTH;
-	public boolean ALPHA_BETA = true;
-	public boolean TRANSPOSITION_TABLE = true;
+	public boolean ALPHA_BETA;
+	public boolean TRANSPOSITION_TABLE;
+	public boolean ASPIRATION_WINDOW;
+	public int WINDOW_SIZE;
 	
 	// transposition table for recording repeat positions
 	private TranspositionTable table = new TranspositionTable();
@@ -29,13 +31,20 @@ public class Minimax {
 	// ways to instantiate Minimax object with settings
 	public Minimax() {
 		
-		this(4, true, true);
+		this(4, true, true, true);
 	}
 	
-	public Minimax(int desiredDepth, boolean alphaBeta, boolean transpositionTable) {
+	public Minimax(int desiredDepth, boolean alphaBeta, boolean transpositionTable, boolean aspirationWindow) {
+		
+		this(desiredDepth, alphaBeta, transpositionTable, aspirationWindow, 50);
+	}
+	
+	public Minimax(int desiredDepth, boolean alphaBeta, boolean transpositionTable, boolean aspirationWindow, int windowSize) {
 		DESIRED_DEPTH = desiredDepth;
 		ALPHA_BETA = alphaBeta;
 		TRANSPOSITION_TABLE = transpositionTable;
+		ASPIRATION_WINDOW = aspirationWindow;
+		WINDOW_SIZE = windowSize;
 	}
 	
 	// call method to find best move given presets
@@ -147,42 +156,101 @@ public class Minimax {
 		// recurse through nodes with minimax with alpha beta
 		int localBest = maximizing ? -90000 : 90000;
 		
+		// create priority list with transposition tables and aspiration windows
+		boolean usingMovePrioritization = TRANSPOSITION_TABLE && ASPIRATION_WINDOW;
+		ArrayList<Priority> prioritization = new ArrayList<Priority>();
+		if(usingMovePrioritization) {
+			for(Move move : MoveGenerator.generateLegalMoves(position)) {
+				position.doMove(move);
+				prioritization.add(new Priority(move, table.existsPosition(position.getPositionId()) ? table.getValuation(position.getPositionId()) : Evaluator.evaluateLeafNode(position)));
+				position.undoMove();
+			}
+		}
+
+		
 		if(maximizing) {
 			
-			for(Move move : MoveGenerator.generateLegalMoves(position)) {
+			if(usingMovePrioritization) {
 				
-				// test out the move
-				position.doMove(move);
-				int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
-				position.undoMove();
+				Collections.sort(prioritization);
+				Collections.reverse(prioritization);
 				
-				localBest = Math.max(localBest, localValue);
-				
-				// alpha cutoff
-				alpha = Math.max(alpha, localBest);
-				if(beta <= alpha) {
-					return localBest;
+				for(Priority p : prioritization) {
+					
+					// test out the move
+					position.doMove(p.MOVE);
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+					position.undoMove();
+					
+					localBest = Math.max(localBest, localValue);
+					
+					// alpha cutoff
+					alpha = Math.max(alpha, localBest);
+					if(beta <= alpha) {
+						return localBest;
+					}
 				}
+			} else {
 				
+				for(Move move : MoveGenerator.generateLegalMoves(position)) {
+					
+					// test out the move
+					position.doMove(move);
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+					position.undoMove();
+					
+					localBest = Math.max(localBest, localValue);
+					
+					// alpha cutoff
+					alpha = Math.max(alpha, localBest);
+					if(beta <= alpha) {
+						return localBest;
+					}
+					
+				}
 			}
+			
 		} else {
 			
-			for(Move move : MoveGenerator.generateLegalMoves(position)) {
+			if(usingMovePrioritization) {
 				
-				// test out the move
-				position.doMove(move);
-				int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
-				position.undoMove();
+				Collections.sort(prioritization);
 				
-				localBest = Math.min(localBest, localValue);
-				
-				// beta cutoff
-				beta = Math.min(beta, localBest);
-				if(beta <= alpha) {
-					return localBest;
+				for(Priority p : prioritization) {
+					
+					// test out the move
+					position.doMove(p.MOVE);
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+					position.undoMove();
+					
+					localBest = Math.min(localBest, localValue);
+					
+					// beta cutoff
+					beta = Math.min(beta, localBest);
+					if(beta <= alpha) {
+						return localBest;
+					}
 				}
+			} else {
 				
+				for(Move move : MoveGenerator.generateLegalMoves(position)) {
+					
+					// test out the move
+					position.doMove(move);
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
+					position.undoMove();
+					
+					localBest = Math.min(localBest, localValue);
+					
+					// beta cutoff
+					beta = Math.min(beta, localBest);
+					if(beta <= alpha) {
+						return localBest;
+					}
+					
+				}
 			}
+			
 		}
 		
 		// update transposition table
@@ -192,97 +260,5 @@ public class Minimax {
 		
 		return localBest;
 	}
-	
-	/*
-	 * WIP CODE THAT DOESN'T WORK AND MAY BE DELETED
-	// transposition tables on top of alpha beta pruning
-	private int minimaxAlphaBetaTables(Board position, int depth, boolean maximizing, int alpha, int beta) throws MoveGeneratorException {
-		
-		NODES_EVALUATED++;
-		
-		// test for transposition at target depth or deeper
-		String positionId = position.getPositionId();
-		if(table.existsPosition(positionId)) {
-			if(table.getDepth(positionId) >= depth) {
-				return table.getValuation(positionId);
-			}
-		}
-		
-		// check if game is in finalized state
-		if(position.isDraw()) {
-			return 0;
-		}
-		if(position.isMated()) {
-			return maximizing ? -90000 : 90000;
-		}
-		
-		// if at target depth, call evaluation function on position
-		if(depth <= 0) {
-			return Evaluator.evaluateLeafNode(position);
-		}
-		
-		// recurse through nodes with minimax with alpha beta, prioritizing nodes with transposition tables
-		int localBest = maximizing ? -90000 : 90000;
-		ArrayList<Priority> prioritization = new ArrayList<Priority>();
-		for(Move move : MoveGenerator.generateLegalMoves(position)) {
-			position.doMove(move);
-			prioritization.add(new Priority(move, table.existsPosition(position.getPositionId()) ? table.getValuation(position.getPositionId()) : 0));
-			position.undoMove();
-		}
-				
-		if(maximizing) {
-			
-			Collections.sort(prioritization);
-			
-			if(prioritization.get(0).EVALUATION != 0)
-			System.out.println(prioritization.toString() + " " + maximizing);
-			
-			for(Move move : MoveGenerator.generateLegalMoves(position)) {
-				
-				// test out the move
-				position.doMove(move);
-				int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
-				position.undoMove();
-				
-				localBest = Math.max(localBest, localValue);
-				
-				// alpha cutoff
-				alpha = Math.max(alpha, localBest);
-				if(beta <= alpha) {
-					return localBest;
-				}
-				
-			}
-		} else {
-			
-			Collections.sort(prioritization);
-			Collections.reverse(prioritization);
-			
-			if(prioritization.get(0).EVALUATION != 0)
-			System.out.println(prioritization.toString() + " " + maximizing);
-			
-			for(Move move : MoveGenerator.generateLegalMoves(position)) {
-				
-				// test out the move
-				position.doMove(move);
-				int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
-				position.undoMove();
-				
-				localBest = Math.min(localBest, localValue);
-				
-				// beta cutoff
-				beta = Math.min(beta, localBest);
-				if(beta <= alpha) {
-					return localBest;
-				}
-				
-			}
-		}
-		
-		// append position stats to transposition table
-		table.updatePosition(positionId, localBest, depth);
-		
-		return localBest;
-	}*/
     
 }

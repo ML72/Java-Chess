@@ -2,7 +2,7 @@ package minimax;
 
 import com.github.bhlangonijr.chesslib.move.Move;
 
-public class Priority implements Comparable {
+public class Priority implements Comparable<Object> {
 
 	public Move MOVE;
 	public int EVALUATION;
