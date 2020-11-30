@@ -25,8 +25,6 @@ public class Minimax {
 	public int DESIRED_DEPTH;
 	public boolean ALPHA_BETA;
 	public boolean TRANSPOSITION_TABLE;
-	public boolean ASPIRATION_WINDOW;
-	public int WINDOW_SIZE;
 	
 	// transposition table for recording repeat positions
 	private TranspositionTable table = new TranspositionTable();
@@ -34,20 +32,13 @@ public class Minimax {
 	// ways to instantiate Minimax object with settings
 	public Minimax() {
 		
-		this(4, true, true, true);
+		this(4, true, true);
 	}
 	
-	public Minimax(int desiredDepth, boolean alphaBeta, boolean transpositionTable, boolean aspirationWindow) {
-		
-		this(desiredDepth, alphaBeta, transpositionTable, aspirationWindow, 50);
-	}
-	
-	public Minimax(int desiredDepth, boolean alphaBeta, boolean transpositionTable, boolean aspirationWindow, int windowSize) {
+	public Minimax(int desiredDepth, boolean alphaBeta, boolean transpositionTable) {
 		DESIRED_DEPTH = desiredDepth;
 		ALPHA_BETA = alphaBeta;
 		TRANSPOSITION_TABLE = transpositionTable;
-		ASPIRATION_WINDOW = aspirationWindow;
-		WINDOW_SIZE = windowSize;
 	}
 	
 	// call method to find best move given presets
@@ -82,9 +73,11 @@ public class Minimax {
 			} else if(!isMaximizing && value < bestValue) {
 				bestValue = value;
 				bestMove = move;
-			} else if(value == bestValue && Math.random() > 0.6) {
+			} else if(value == bestValue && Math.random() > 0.4) {
 				bestMove = move;
 			}
+			
+			System.out.println("Move " + move.toString() + " yields " + value + "\n"); // DEBUG STATEMENT ==========================================
 			
 			position.undoMove();
 			
@@ -134,7 +127,7 @@ public class Minimax {
 	
 	// minimax with alpha beta pruning
 	private int minimaxAlphaBeta(Board position, int depth, boolean maximizing, int alpha, int beta) throws MoveGeneratorException {
-		
+				
 		NODES_EVALUATED++;
 		
 		// test for transposition at target depth or deeper
@@ -166,8 +159,8 @@ public class Minimax {
 		// recurse through nodes with minimax with alpha beta
 		int localBest = maximizing ? -90000 : 90000;
 		
-		// create priority list with transposition tables and aspiration windows - iterative deepening approach
-		boolean usingMovePrioritization = TRANSPOSITION_TABLE && ASPIRATION_WINDOW;
+		// create priority list with transposition tables - iterative deepening approach
+		boolean usingMovePrioritization = TRANSPOSITION_TABLE;
 		ArrayList<Priority> prioritization = new ArrayList<Priority>();
 		if(usingMovePrioritization) {
 			for(Move move : MoveGenerator.generateLegalMoves(position)) {
@@ -176,7 +169,6 @@ public class Minimax {
 				position.undoMove();
 			}
 		}
-
 		
 		if(maximizing) {
 			
@@ -186,19 +178,11 @@ public class Minimax {
 				Collections.reverse(prioritization);
 				
 				for(Priority p : prioritization) {
-					
+										
 					// test out the move
 					position.doMove(p.MOVE);
-					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, Math.max(alpha, p.EVALUATION - WINDOW_SIZE), Math.min(beta, p.EVALUATION + WINDOW_SIZE));
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
 					position.undoMove();
-					
-					// a costly re-search if the value falls out of bounds
-					if((localValue > alpha && localValue < p.EVALUATION - WINDOW_SIZE) || (localValue < beta && localValue > p.EVALUATION + WINDOW_SIZE)) {
-						
-						RE_SEARCHES++;
-
-						localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
-					}
 					
 					localBest = Math.max(localBest, localValue);
 					
@@ -243,19 +227,12 @@ public class Minimax {
 				Collections.sort(prioritization);
 				
 				for(Priority p : prioritization) {
+
 					
 					// test out the move
 					position.doMove(p.MOVE);
-					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, Math.max(alpha, p.EVALUATION - WINDOW_SIZE), Math.min(beta, p.EVALUATION + WINDOW_SIZE));
+					int localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
 					position.undoMove();
-					
-					// a costly re-search if the value falls out of bounds
-					if((localValue > alpha && localValue < p.EVALUATION - WINDOW_SIZE) || (localValue < beta && localValue > p.EVALUATION + WINDOW_SIZE)) {
-						
-						localValue = minimaxAlphaBeta(position, depth-1, !maximizing, alpha, beta);
-						
-						RE_SEARCHES++;
-					}
 					
 					localBest = Math.min(localBest, localValue);
 					

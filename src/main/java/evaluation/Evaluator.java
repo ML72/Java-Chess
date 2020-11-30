@@ -31,4 +31,10 @@ public class Evaluator {
 		
 		return valuation;
 	}
+	
+	// A Quiescence Search to avoid the horizon effect
+	public static int quietSearch(Board position) {
+		
+		return 1;
+	}
 }
