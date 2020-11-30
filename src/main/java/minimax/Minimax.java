@@ -77,7 +77,7 @@ public class Minimax {
 				bestMove = move;
 			}
 			
-			System.out.println("Move " + move.toString() + " yields " + value + "\n"); // DEBUG STATEMENT ==========================================
+			System.out.println("Move " + move.toString() + " yields " + value); // DEBUG STATEMENT ==========================================
 			
 			position.undoMove();
 			
@@ -101,7 +101,7 @@ public class Minimax {
 		
 		// if at target depth, call evaluation function on position
 		if(depth <= 0) {
-			return Evaluator.evaluateLeafNode(position);
+			return Evaluator.evaluateLeafNode(position, maximizing);
 		}
 		
 		// recurse through nodes with minimax
@@ -153,7 +153,7 @@ public class Minimax {
 		
 		// if at target depth, call evaluation function on position
 		if(depth <= 0) {
-			return Evaluator.evaluateLeafNode(position);
+			return Evaluator.evaluateLeafNode(position, maximizing);
 		}
 		
 		// recurse through nodes with minimax with alpha beta
@@ -165,7 +165,7 @@ public class Minimax {
 		if(usingMovePrioritization) {
 			for(Move move : MoveGenerator.generateLegalMoves(position)) {
 				position.doMove(move);
-				prioritization.add(new Priority(move, table.existsPosition(position.getPositionId()) ? table.getValuation(position.getPositionId()) : Evaluator.evaluateLeafNode(position)));
+				prioritization.add(new Priority(move, table.existsPosition(position.getPositionId()) ? table.getValuation(position.getPositionId()) : Evaluator.evaluateLeafNodeWithDepth(position, maximizing, 0)));
 				position.undoMove();
 			}
 		}
