@@ -19,7 +19,6 @@ public class Minimax {
 	public int NODES_EVALUATED = 0;
 	public int ALPHA_BETA_CUTOFFS = 0;
 	public int IDENTICAL_TRANSPOSITIONS = 0;
-	public int RE_SEARCHES = 0;
 	
 	// settings to tweak
 	public int DESIRED_DEPTH;
@@ -51,7 +50,6 @@ public class Minimax {
 		NODES_EVALUATED = 0;
 		ALPHA_BETA_CUTOFFS = 0;
 		IDENTICAL_TRANSPOSITIONS = 0;
-		RE_SEARCHES = 0;
 	
 		// loop through possible moves
 		MoveList moves = MoveGenerator.generateLegalMoves(position);
@@ -76,9 +74,7 @@ public class Minimax {
 			} else if(value == bestValue && Math.random() > 0.4) {
 				bestMove = move;
 			}
-			
-			System.out.println("Move " + move.toString() + " yields " + value); // DEBUG STATEMENT ==========================================
-			
+						
 			position.undoMove();
 			
 		}

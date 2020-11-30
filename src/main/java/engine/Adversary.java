@@ -68,7 +68,6 @@ public class Adversary {
 	    headingRow.createCell(1).setCellValue("Nodes Evaluated");
 	    headingRow.createCell(2).setCellValue("Alpha-Beta Cutoffs");
 	    headingRow.createCell(3).setCellValue("Transposition Cutoffs");
-	    headingRow.createCell(4).setCellValue("Re-searches");
 	    
 	    Row averageRow = sheet.createRow(1);
 	    averageRow.createCell(0).setCellValue("AVERAGE");
@@ -82,8 +81,6 @@ public class Adversary {
 	    c.setCellType(HSSFCell.CELL_TYPE_FORMULA);
 	    c.setCellFormula("AVERAGE(D3:D1000)");
 	    c = averageRow.createCell(4);
-	    c.setCellType(HSSFCell.CELL_TYPE_FORMULA);
-	    c.setCellFormula("AVERAGE(E3:E1000)");
 	    
 	    int rowCount = 1;
 	    
@@ -103,7 +100,6 @@ public class Adversary {
 		    	dataRow.createCell(1).setCellValue(MINIMAX.NODES_EVALUATED);
 		    	dataRow.createCell(2).setCellValue(MINIMAX.ALPHA_BETA_CUTOFFS);
 		    	dataRow.createCell(3).setCellValue(MINIMAX.IDENTICAL_TRANSPOSITIONS);
-		    	dataRow.createCell(4).setCellValue(MINIMAX.RE_SEARCHES);
 
 			    board.doMove(move);
 			    
@@ -111,6 +107,7 @@ public class Adversary {
 		    	
 		    	dataRow.createCell(0).setCellValue("ENGINE ERROR");
 			    System.err.println("ENGINE ERROR");
+
 			    break;
 		    }
 	    }
